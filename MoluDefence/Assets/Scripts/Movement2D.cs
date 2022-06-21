@@ -18,6 +18,6 @@ public class Movement2D : MonoBehaviour
 
     public void MoveTo(Vector3 direction)
     {
-        moveDirection = direction;
+        _moveDirection = direction;
     }
 }
