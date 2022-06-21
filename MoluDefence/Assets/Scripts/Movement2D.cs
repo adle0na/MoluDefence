@@ -5,15 +5,15 @@ using UnityEngine;
 public class Movement2D : MonoBehaviour
 {
     [SerializeField]
-    private float _moveSpeed = 0.0f;
+    private float   moveSpeed = 0.0f;
     [SerializeField]
-    private Vector3 _moveDirection = Vector3.zero;
+    private Vector3 moveDirection = Vector3.zero;
 
-    public float MoveSpeed => _moveSpeed;
+    public float MoveSpeed => moveSpeed;
 
     private void Update()
     {
-        transform.position += _moveDirection * _moveSpeed * Time.deltaTime;
+        transform.position += moveDirection * moveSpeed * Time.deltaTime;
     }
 
     public void MoveTo(Vector3 direction)
