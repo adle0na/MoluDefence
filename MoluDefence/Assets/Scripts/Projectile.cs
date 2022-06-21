@@ -7,11 +7,13 @@ public class Projectile : MonoBehaviour
 {
     private Movement2D _movement2D;
     private Transform  _target;
+    private int        _damage;
 
-    public void Setup(Transform target)
+    public void Setup(Transform target, int damage)
     {
         _movement2D  = GetComponent<Movement2D>();
         this._target = target;
+        this._damage = damage;
     }
 
     private void Update()
@@ -32,7 +34,7 @@ public class Projectile : MonoBehaviour
         if (collision.transform != _target)
             return;
         
-        collision.GetComponent<Enemy>().OnDie();
+        collision.GetComponent<EnemyHP>().TakeDamage(_damage);
         Destroy(gameObject);
     }
 }
