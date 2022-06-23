@@ -7,21 +7,33 @@ using UnityEngine.XR;
 public enum WeaponState { SearchTarget = 0, AttackToTarget}
 public class TowerWeapon : MonoBehaviour
 {
+    [Header("TowerData")]
     [SerializeField]
     private GameObject   projectilePrefab;
+    
     [SerializeField]
     private Transform    spawnPoint;
+    
     [SerializeField]
     private float        attackRate  = 0.5f;
+    
     [SerializeField]
     private float        attackRange = 2.0f;
+    
     [SerializeField]
     private int          attackDamage = 1;
+
+    private int          level = 0;
     
     private WeaponState  _weaponState = WeaponState.SearchTarget;
     private Transform    _attackTarget = null;
     private EnemySpawner _enemySpawner;
 
+    public float Damage => attackDamage;
+    public float Rate   => attackRate;
+    public float Range  => attackRange;
+    public int Level    => level + 1;
+    
     public void Setup(EnemySpawner enemySpawner)
     {
         this._enemySpawner = enemySpawner;

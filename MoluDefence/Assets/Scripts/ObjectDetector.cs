@@ -8,6 +8,9 @@ public class ObjectDetector : MonoBehaviour
     [SerializeField]
     private TowerSpawner towerSpawner;
 
+    [SerializeField]
+    private TowerDataViewer towerDataViewer;
+
     private Camera       _mainCamera;
     private Ray          _ray;
     private RaycastHit   _hit;
@@ -34,6 +37,10 @@ public class ObjectDetector : MonoBehaviour
             if (_hit.transform.CompareTag("Tile"))
             {
                 towerSpawner.SpawnTower(_hit.transform);
+            }
+            else if (_hit.transform.CompareTag("Tower"))
+            {
+                towerDataViewer.OnPanel(_hit.transform);
             }
         }
         yield break;
