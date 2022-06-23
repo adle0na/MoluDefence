@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public enum EnemyDestroyType { Die = 0, Arrive }
 public class Enemy : MonoBehaviour
 {
     private int          _wayPointCount;
@@ -9,6 +11,9 @@ public class Enemy : MonoBehaviour
     private int          _currentIndex = 0;
     private Movement2D   _movement2D;
     private EnemySpawner _enemySpawner;
+
+    [SerializeField]
+    private int gold = 10;
 
     public void Setup(EnemySpawner enemySpawner, Transform[] wayPoints)
     {
@@ -50,11 +55,16 @@ public class Enemy : MonoBehaviour
             _movement2D.MoveTo(direction);
         }
         else
-            OnDie();
+        {
+            gold = 0;
+            OnDie(EnemyDestroyType.Arrive);
+        }
+            
     }
 
-    public void OnDie()
+    public void OnDie(EnemyDestroyType type)
     {
-        _enemySpawner.DestroyEnemy(this);
+        _enemySpawner.DestroyEnemy(type, this, gold);
+        
     }
 }

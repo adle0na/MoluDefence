@@ -7,14 +7,17 @@ public class EnemyHP : MonoBehaviour
 {
     [SerializeField]
     private float          maxHP;
-    private float          _currentHp;
+    private float          currentHP;
     private bool           _isDie = false;
     private Enemy          _enemy;
     private SpriteRenderer _spriteRenderer;
 
+    public float MaxHP     => maxHP;
+    public float CurrentHP => currentHP;
+
     private void Awake()
     {
-        _currentHp      = maxHP;
+        currentHP       = maxHP;
         _enemy          = GetComponent<Enemy>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -24,15 +27,15 @@ public class EnemyHP : MonoBehaviour
         if (_isDie == true)
             return;
 
-        _currentHp -= damage;
+        currentHP -= damage;
         
         StopCoroutine("HitMotion");
         StartCoroutine("HitMotion");
 
-        if (_currentHp <= 0)
+        if (currentHP <= 0)
         {
             _isDie = true;
-            _enemy.OnDie();
+            _enemy.OnDie(EnemyDestroyType.Die);
         }
     }
 
