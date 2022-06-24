@@ -25,6 +25,12 @@ public class TowerDataViewer : MonoBehaviour
     [SerializeField]
     private TowerAttackRange towerAttackRange;
 
+    [SerializeField]
+    private Button           upGradeBtn;
+
+    [SerializeField]
+    private SystemTextViewer systemTextViewer;
+
     private TowerWeapon      currentTower;
     
     private void Awake()
@@ -48,7 +54,7 @@ public class TowerDataViewer : MonoBehaviour
         towerAttackRange.OnAttackRange(currentTower.transform.position, currentTower.Range);
     }
     
-    private void OffPanel()
+    public void OffPanel()
     {
         gameObject.SetActive(false);
         towerAttackRange.OffAttackRange();
@@ -56,9 +62,33 @@ public class TowerDataViewer : MonoBehaviour
 
     private void UpdateTowerDate()
     {
-        textDamage.text = "Damage : " + currentTower.Damage;
-        textRate.text   = "Rate : "   + currentTower.Rate;
-        textRange.text  = "Range : "  + currentTower.Range;
-        textLevel.text  = "Level : "  + currentTower.Level;
+        imageTower.sprite = currentTower.TowerSprite;
+        textDamage.text   = "Damage : " + currentTower.Damage;
+        textRate.text     = "Rate : "   + currentTower.Rate;
+        textRange.text    = "Range : "  + currentTower.Range;
+        textLevel.text    = "Level : "  + currentTower.Level;
+
+        upGradeBtn.interactable = currentTower.Level < currentTower.MaxLevel ? true : false;
+    }
+
+    public void OnClickEventTUpgrade()
+    {
+        bool isSuccess = currentTower.Upgrade();
+
+        if (isSuccess == true)
+        {
+            UpdateTowerDate();
+            towerAttackRange.OnAttackRange(currentTower.transform.position, currentTower.Range);
+        }
+        else
+        {
+            systemTextViewer.PrintText(SystemType.Money);
+        }
+    }
+
+    public void OnclickEventTSell()
+    {
+        currentTower.Sell();
+        OffPanel();
     }
 }
