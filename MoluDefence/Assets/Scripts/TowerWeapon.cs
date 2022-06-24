@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.XR;
 
-public enum WeaponType  {Cannon = 0, Laser, }
+public enum WeaponType  {Cannon = 0, Laser, Slow, Buff, }
 public enum WeaponState { SearchTarget = 0, TryAttackCannon, TryAttackLaser, }
 public class TowerWeapon : MonoBehaviour
 {
@@ -35,29 +35,48 @@ public class TowerWeapon : MonoBehaviour
     private int            _level = 0;
     private PlayerGold     _playerGold;
     private SpriteRenderer _spriteRenderer;
+    private TowerSpawner   _towerSpawner;
     private WeaponState    _weaponState  = WeaponState.SearchTarget;
     private Transform      _attackTarget = null;
     private EnemySpawner   _enemySpawner;
     private Tile           _ownerTile;
+
+    private float          _addedDamage;
+    private int            _buffLevel;
     
-    public Sprite TowerSprite => towerTemplate.weapon[_level].sprite;
-    public float Damage       => towerTemplate.weapon[_level].damage;
-    public float Rate         => towerTemplate.weapon[_level].rate;
-    public float Range        => towerTemplate.weapon[_level].range;
-    public int Level          => _level + 1;
-    public int MaxLevel       => towerTemplate.weapon.Length;
-    
-    public void Setup(EnemySpawner enemySpawner, PlayerGold playerGold, Tile ownerTile)
+    public Sprite      TowerSprite => towerTemplate.weapon[_level].sprite;
+    public float       Damage      => towerTemplate.weapon[_level].damage;
+    public float       Rate        => towerTemplate.weapon[_level].rate;
+    public float       Range       => towerTemplate.weapon[_level].range;
+    public int         UpgradeCost => Level < MaxLevel ? towerTemplate.weapon[_level + 1].cost : 0;
+    public int         SellCost    => towerTemplate.weapon[_level].sell;
+    public int         Level       => _level + 1;
+    public int         MaxLevel    => towerTemplate.weapon.Length;
+    public float       Slow        => towerTemplate.weapon[_level].slow;
+    public float       Buff        => towerTemplate.weapon[_level].buff;
+    public WeaponType  WeaponType  => weaponType;
+    public float       AddedDamage
+    {
+        set => _addedDamage = Mathf.Max(0, value);
+        get => _addedDamage;
+    }
+    public int         BuffLevel
+    {
+        set => _buffLevel   = Mathf.Max(0, value);
+        get => _buffLevel;
+    }
+
+    public void Setup(TowerSpawner towerSpawner, EnemySpawner enemySpawner, PlayerGold playerGold, Tile ownerTile)
     {
         _spriteRenderer     = GetComponent<SpriteRenderer>();
-        
+
+        this._towerSpawner  = towerSpawner;
         this._enemySpawner  = enemySpawner;
-
         this._playerGold    = playerGold;
-
         this._ownerTile     = ownerTile;
         
-        ChangeState(WeaponState.SearchTarget);
+        if(weaponType == WeaponType.Cannon || weaponType == WeaponType.Laser)
+            ChangeState(WeaponState.SearchTarget);
     }
 
     public void ChangeState(WeaponState newState)
@@ -140,6 +159,30 @@ public class TowerWeapon : MonoBehaviour
             yield return null;
         }
     }
+
+    public void OnBuffAroundTower()
+    {
+        GameObject[] towers = GameObject.FindGameObjectsWithTag("Tower");
+
+        for (int i = 0; i < towers.Length; ++i)
+        {
+            TowerWeapon weapon = towers[i].GetComponent<TowerWeapon>();
+
+            if (weapon.BuffLevel > Level)
+            {
+                continue;
+            }
+
+            if (Vector3.Distance(weapon.transform.position, transform.position) <= towerTemplate.weapon[_level].range)
+            {
+                if (weapon.WeaponType == WeaponType.Cannon || weapon.WeaponType == WeaponType.Laser)
+                {
+                    weapon.AddedDamage = weapon.Damage * (towerTemplate.weapon[_level].buff);
+                    weapon.BuffLevel   = Level;
+                }
+            }
+        }
+    }
     
     private Transform FindClosestAttackTarget()
     {
@@ -152,7 +195,7 @@ public class TowerWeapon : MonoBehaviour
             if (distance <= towerTemplate.weapon[_level].range && distance <= closestDistSqr)
             {
                 closestDistSqr = distance;
-                _attackTarget = _enemySpawner.EnemyList[i].transform;
+                _attackTarget  = _enemySpawner.EnemyList[i].transform;
             }
         }
         return _attackTarget;
@@ -180,7 +223,8 @@ public class TowerWeapon : MonoBehaviour
     {
         GameObject clone = Instantiate(projectilePrefab, spawnPoint.position, Quaternion.identity);
 
-        clone.GetComponent<Projectile>().Setup(_attackTarget, towerTemplate.weapon[_level].damage);
+        float damage = towerTemplate.weapon[_level].damage + AddedDamage;
+        clone.GetComponent<Projectile>().Setup(_attackTarget, damage);
     }
 
     private void SpawnLaser()
@@ -195,7 +239,8 @@ public class TowerWeapon : MonoBehaviour
                 lineRenderer.SetPosition(0, spawnPoint.position);
                 lineRenderer.SetPosition(1, new Vector3(hit[i].point.x, hit[i].point.y, 0) + Vector3.back);
                 hitEffect.position = hit[i].point;
-                _attackTarget.GetComponent<EnemyHP>().TakeDamage(towerTemplate.weapon[_level].damage * Time.deltaTime);
+                float damage = towerTemplate.weapon[_level].damage + AddedDamage;
+                _attackTarget.GetComponent<EnemyHP>().TakeDamage(damage * Time.deltaTime);
             }
         }
     }
@@ -227,13 +272,16 @@ public class TowerWeapon : MonoBehaviour
             lineRenderer.startWidth = 0.05f + _level * 0.05f;
             lineRenderer.endWidth   = 0.05f;
         }
+        
+        _towerSpawner.OnBuffAllBuffTowers();
+
         return true;
     }
 
     public void Sell()
     {
         _playerGold.CurrentGold += towerTemplate.weapon[_level].sell;
-        _ownerTile.IsBuildTower = false;
+        _ownerTile.IsBuildTower  = false;
         Destroy(gameObject);
     }
 }
